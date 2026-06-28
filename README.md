@@ -1,6 +1,17 @@
 # Forex Swing Bot 🤖
 
-Bot de alertas de trading que replica la lógica del script Pine Script **EURUSD Swing H1-D1 Starter**, envía señales a Telegram y permite configurar, gestionar y analizar múltiples pares e indicadores de forma simultánea desde una interfaz web dinámica.
+Bot de alertas para Forex que replica la lógica del script Pine Script **EURUSD Swing H1-D1 Starter**. Envía señales a Telegram y permite gestionar múltiples pares e indicadores desde una interfaz web simple.
+
+---
+
+## Descripción
+
+Este proyecto ejecuta un servidor Flask que carga perfiles de configuración por par de divisas y programa análisis periódico con APScheduler.
+
+- Calcula señales LONG / SHORT usando medias móviles, RSI y ATR.
+- Controla múltiples símbolos con perfiles JSON en `profiles/`.
+- Envía alertas a Telegram cuando cambia la dirección de la señal.
+- Permite pruebas, escaneos manuales y administración desde una UI web.
 
 ---
 
@@ -8,153 +19,187 @@ Bot de alertas de trading que replica la lógica del script Pine Script **EURUSD
 
 ```
 eurusd_bot/
-├── app.py              ← Servidor Flask + APScheduler
-├── signal_engine.py    ← Lógica de cálculo de señales (réplica Pine Script)
+├── main.py             ← Servidor Flask + APScheduler
+├── signal_engine.py    ← Cálculo de señales y descarga de datos de Yahoo Finance
 ├── requirements.txt    ← Dependencias de Python
+├── .gitignore          ← Archivos que no deben versionarse
+├── LICENSE             ← Licencia del proyecto
 ├── .env                ← Credenciales y tokens de Telegram (no subir a git)
-├── profiles/           ← Directorio de configuraciones guardadas por par (.json)
+├── profiles/           ← Configuraciones guardadas por par (.json)
+├── signals.log         ← Registro de ejecución generado en tiempo de ejecución
 └── templates/
-    └── index.html      ← Interfaz web multipanel de configuración y monitorización
+    └── index.html      ← Interfaz web de configuración y monitorización
 ```
 
 ---
 
-## 1. Instalar dependencias
+## Requisitos
 
-Se recomienda usar un entorno virtual de Python:
+- Python 3.11+ recomendado
+- Conexión de red para descargar datos de Yahoo Finance y usar Telegram
+
+---
+
+## Instalación
 
 ```bash
-# Crear entorno virtual
+cd /Users/kon/Desa/Python/MyAnafund/forex/eurusd_bot
 python -m venv .venv
-source .venv/bin/activate  # En Windows: .venv\Scripts\activate
-
-# Instalar dependencias
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
 ---
 
-## 2. Configurar Telegram
+## Configuración de Telegram
 
-El bot utiliza la API de Telegram para enviar las señales y alertas directamente a tu chat privado o canal de forma independiente por cada par analizado.
-
-### Crear el bot
-1. Abre Telegram y busca a **@BotFather**.
-2. Envía el comando `/newbot` y sigue las instrucciones para asignarle un nombre y un usuario.
-3. Copia el **token HTTP API** proporcionado (ej. `123456789:AABBccdd...`).
-
-### Obtener tu Chat ID
-1. Busca a **@userinfobot** en Telegram.
-2. Inicia una conversación y te responderá con tu **ID** (un número de 9-10 dígitos).
-
-### Configurar el archivo `.env`
-Crea un archivo llamado `.env` en la raíz del proyecto y añade tus credenciales:
+Crea un archivo `.env` en la raíz del proyecto con estas variables:
 
 ```dotenv
 TELEGRAM_TOKEN=tu_token_de_bot_aqui
 TELEGRAM_CHAT_ID=tu_chat_id_aqui
 ```
 
+- `TELEGRAM_TOKEN`: token del bot creado con **@BotFather**.
+- `TELEGRAM_CHAT_ID`: ID del chat al que se enviarán las alertas.
+
 ---
 
-## 3. Arrancar el bot
+## Ejecución
 
-Ejecuta el servidor web y el programador de tareas:
+Inicia el servidor Flask con:
 
 ```bash
-python app.py
+python main.py
 ```
 
-Al iniciarse, **el bot ejecuta un escaneo inicial inmediato en segundo plano** para todos los pares que estén activos para no dejar las tarjetas vacías.
+Luego abre en el navegador:
 
-Por defecto, la interfaz web estará disponible en: **http://localhost:5000**
+```
+http://localhost:5000
+```
 
----
-
-## 4. Uso de la Interfaz Web (Frontend)
-
-La interfaz permite controlar las configuraciones en tiempo real sin necesidad de reiniciar el script de Python.
-
-| Sección / Acción | Descripción |
-|------------------|-------------|
-| **Pares guardados (Marca de Análisis)** | Muestra los perfiles bajo `/profiles`. Puedes pulsar un par para cargarlo en el formulario o borrarlo con **✕**. Cada par cuenta con un **checkbox** para activarlo o desactivarlo del análisis automático al instante. |
-| **Bot activo** | Interruptor en el formulario de configuración para habilitar o deshabilitar el análisis del par en edición. |
-| **Par (Yahoo Finance)** | Selector desplegable (combo box) con los pares más relevantes de Forex, criptomonedas e índices. Permite agregar cualquier ticker personalizado de Yahoo Finance mediante un prompt (`➕ Añadir otro...`). |
-| **Intervalo (min)** | Cada cuántos minutos se escanea de forma independiente este par. |
-| **Guardar par** | Guarda la configuración actual en `/profiles` y sincroniza las tareas de fondo en el planificador de inmediato. |
-| **Escanear ahora** | Realiza una consulta y cálculo de señal inmediato para **todos los pares que tengan la marca de análisis activa**. |
-| **Probar Telegram** | Envía un mensaje corto de prueba para verificar que la integración con Telegram funcione. |
+La aplicación arrancará en el puerto `5000` y mostrará la interfaz para gestionar configuraciones.
 
 ---
 
-## 5. Análisis Concurrentes y Visualización Multitarjeta
+## Uso de la Interfaz Web
 
-* **Planificador Inteligente (APScheduler)**: En lugar de un ciclo global rígido, el back-end corre subprocesos independientes para cada par de monedas habilitado, respetando su propio intervalo de tiempo de consulta configurado (ej. EUR/USD cada 30 min y BTC/USD cada 5 min).
-* **Caché y Estados Independientes**: Las señales generadas, marcas de tiempo y el control de alertas duplicadas de Telegram se guardan y aíslan de forma independiente por cada par, evitando interferencias de alertas entre símbolos.
-* **Paneles de Señales Dinámicos**: La columna derecha del frontend genera dinámicamente **una tarjeta de estado por cada par que tenga la marca de análisis habilitada**, mostrando de un vistazo sus entradas, stops, targets, valores de RSI, ATR y la confluencia de tendencias base y macro (HTF).
+La interfaz permite:
 
----
-
-## 6. Parámetros equivalentes Pine → Python
-
-| Pine Script | Interfaz Web / JSON | Por defecto | Descripción |
-|-------------|---------------------|-------------|-------------|
-| `emaFastLen` | EMA rápida | `50` | Periodo de la Media Móvil Exponencial rápida. |
-| `emaSlowLen` | EMA lenta | `200` | Periodo de la Media Móvil Exponencial lenta. |
-| `rsiLen` | RSI períodos | `14` | Periodos del indicador de fuerza relativa. |
-| `atrLen` | ATR períodos | `14` | Periodos del Average True Range para volatilidad. |
-| `stopATR` | Stop × ATR | `1.5` | Multiplicador del ATR para definir la distancia del Stop Loss. |
-| `tpATR` | TP × ATR | `3.0` | Multiplicador del ATR para definir la distancia del Take Profit. |
-| `useHTF` | Filtro marco mayor | `true` | Si está activo, valida que la tendencia HTF coincida con el timeframe base. |
-| `htf` | Marco mayor (HTF) | `D` (Diario) | Temporalidad de la tendencia de marco mayor (`60`, `240`, `D`, `W`). |
+- cargar perfiles guardados desde `profiles/`
+- activar o desactivar el análisis periódico por par
+- modificar parámetros de estrategia
+- guardar perfiles
+- escanear ahora mismo
+- enviar un mensaje de prueba a Telegram
 
 ---
 
-## 7. Lógica de señales (Réplica de Pine Script)
+## Perfiles de Par
 
-Las señales se generan a partir de la confluencia de filtros de tendencia y momentum:
+Cada par se guarda en `profiles/` como un JSON independiente. Ejemplo:
 
-```text
-EMA Rápida > EMA Lenta        → Tendencia alcista (Timeframe Base)
-HTF EMA Rápida > EMA Lenta    → Tendencia alcista (Macro HTF)
-
-Compra (LONG) cuando:
-  • Tendencia Base es alcista.
-  • Tendencia HTF es alcista (si el filtro HTF está activado).
-  • Pullback: El Low tocó o cruzó la EMA rápida por debajo y el Close cerró por encima.
-  • Momentum: El RSI cruzó 50 hacia arriba en la vela actual.
-
-Venta (SHORT) cuando:
-  • Tendencia Base es bajista.
-  • Tendencia HTF es bajista (si el filtro HTF está activado).
-  • Pullback: El High tocó o cruzó la EMA rápida por arriba y el Close cerró por debajo.
-  • Momentum: El RSI cruzó 50 hacia abajo en la vela actual.
-
-Distancias de órdenes:
-  • Stop Loss   = Precio de Entrada ± (ATR × stopATR)
-  • Take Profit = Precio de Entrada ± (ATR × tpATR)
+```json
+{
+  "symbol": "GBPUSD=X",
+  "timeframe": "60",
+  "ema_fast": 50,
+  "ema_slow": 200,
+  "rsi_len": 19,
+  "atr_len": 13,
+  "stop_atr": 1.6,
+  "tp_atr": 2.0,
+  "use_htf": true,
+  "htf": "D",
+  "interval": 30,
+  "enabled": true
+}
 ```
 
 ---
 
-## 8. Ejecución en Segundo Plano (Producción)
+## Endpoints disponibles
 
-Para dejar corriendo el bot en Linux o Mac tras cerrar la consola, puedes usar `nohup` o `pm2`:
+La aplicación expone estas rutas internas usadas por la UI:
+
+- `GET /` — página principal
+- `GET /api/status` — estado actual, señal, perfiles y logs
+- `POST /api/config` — guarda o actualiza la configuración activa
+- `POST /api/profile/load` — carga un perfil por símbolo
+- `POST /api/profile/toggle_enable` — activa / desactiva un perfil
+- `POST /api/profile/delete` — elimina un perfil
+- `POST /api/scan_now` — ejecuta un escaneo inmediato
+- `POST /api/test_telegram` — envía un mensaje de prueba a Telegram
+
+---
+
+## Lógica de Señales
+
+El motor de señales en `signal_engine.py` usa:
+
+- EMA rápida y lenta para determinar tendencia
+- RSI para detectar impulso y cruces de 50
+- ATR para calcular stop loss y take profit
+- Filtro opcional de marco mayor (HTF)
+
+La señal se considera válida cuando:
+
+- hay tendencia clara en el timeframe base
+- el precio hace un pullback sobre la EMA rápida
+- el RSI cruza 50 en la dirección adecuada
+- si `use_htf` está activado, la tendencia en el marco mayor coincide
+
+---
+
+## Notas de Producción
+
+- `signals.log` guarda el historial y los mensajes de depuración.
+- `profiles/` se crea automáticamente si no existe.
+- `.env` nunca debe subirse a GitHub.
+- Si necesitas ejecutar en segundo plano:
 
 ```bash
-nohup python app.py > bot.log 2>&1 &
-```
-
-Para ver si sigue ejecutándose:
-```bash
-ps aux | grep app.py
+nohup python main.py > bot.log 2>&1 &
 ```
 
 ---
 
-## Notas Adicionales
-- **Fuente de Datos**: Los datos históricos y en tiempo real se descargan de **Yahoo Finance** de manera gratuita y sin requerir claves de API.
-- **Prevención de Alertas Duplicadas**: El bot evita el spam enviando solo un mensaje por dirección de señal (`LONG` o `SHORT`). Una vez enviada una alerta, espera a que cambie la dirección antes de volver a notificar.
-- **Historial y Logs**:
-  - `signals.log`: Guarda el historial técnico completo de depuración del bot.
-  - La interfaz muestra los últimos 10 registros agregados de todos los pares escaneados en el historial global inferior.
+## Dependencias principales
+
+- `flask`
+- `python-dotenv`
+- `pandas`
+- `pandas-ta`
+- `yfinance`
+- `requests`
+- `apscheduler`
+
+---
+
+## Issues / Roadmap
+
+### Cómo reportar un problema
+
+- Abre un issue en GitHub con el título claro y una descripción de la falla.
+- Incluye:
+  - `symbol` y `timeframe` usados
+  - pasos para reproducir
+  - mensaje de error o comportamiento observado
+  - versión de Python y si usas un entorno virtual
+
+### Mejora del proyecto
+
+Prioridades sugeridas:
+
+1. Soporte para más fuentes de datos y brokers.
+2. Validación más completa de configuraciones en la UI.
+3. Mejora del historial de señales y exportación a CSV.
+4. Alertas más inteligentes y reducción de falsos positivos.
+5. Modo de simulación / backtest con datos históricos.
+
+---
+
+## Licencia
+
+Este proyecto está licenciado bajo la licencia MIT. Consulta el archivo `LICENSE` para más detalles.
