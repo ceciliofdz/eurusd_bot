@@ -1,0 +1,14 @@
+{
+  "symbol": "EURUSD=X",
+  "timeframe": "240",
+  "ema_fast": 50,
+  "ema_slow": 200,
+  "rsi_len": 19,
+  "atr_len": 13,
+  "stop_atr": 1.6,
+  "tp_atr": 2.0,
+  "use_htf": true,
+  "htf": "D",
+  "interval": 60,
+  "enabled": true
+}
