@@ -4,15 +4,14 @@ Replica exacta de la lógica Pine Script EURUSD Swing H1-D1 Starter
 """
 
 import pandas as pd
-import pandas_ta as ta
-import yfinance as yf
+import requests
 from dataclasses import dataclass
 from typing import Optional
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Mapa de timeframes de Pine → yfinance
+# Mapa de timeframes de Pine → intervalos de Yahoo Finance
 TIMEFRAME_MAP = {
     "1": "1m", "3": "3m", "5": "5m", "15": "15m", "30": "30m",
     "60": "1h", "120": "2h", "240": "4h", "D": "1d", "W": "1wk", "M": "1mo"
@@ -21,6 +20,25 @@ TIMEFRAME_MAP = {
 HTF_PERIOD_MAP = {
     "1": "7d",  "5": "7d",  "15": "60d", "30": "60d",
     "60": "60d", "240": "180d", "D": "2y", "W": "5y"
+}
+
+YAHOO_INTERVAL_MAP = {
+    "1m": "1m",
+    "3m": "1m",
+    "5m": "5m",
+    "15m": "15m",
+    "30m": "30m",
+    "1h": "60m",
+    "2h": "60m",
+    "4h": "60m",
+    "1d": "1d",
+    "1wk": "1wk",
+    "1mo": "1mo",
+}
+
+RESAMPLE_RULES = {
+    "2h": "2h",
+    "4h": "4h",
 }
 
 
@@ -71,14 +89,70 @@ def _crossunder(series: pd.Series, level: float) -> pd.Series:
     return below & ~below.shift(1).fillna(False)
 
 
+def _resample_ohlc(df: pd.DataFrame, rule: str) -> pd.DataFrame:
+    return (
+        df.resample(rule)
+        .agg({
+            "Open": "first",
+            "High": "max",
+            "Low": "min",
+            "Close": "last",
+            "Volume": "sum",
+        })
+        .dropna(subset=["Open", "High", "Low", "Close"])
+    )
+
+
 def fetch_data(symbol: str, interval: str, period: str) -> Optional[pd.DataFrame]:
     try:
-        ticker = yf.Ticker(symbol)
-        df = ticker.history(period=period, interval=interval)
+        yahoo_interval = YAHOO_INTERVAL_MAP.get(interval, "60m")
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+        response = requests.get(
+            url,
+            params={
+                "range": period,
+                "interval": yahoo_interval,
+                "includePrePost": "false",
+                "events": "div,splits",
+            },
+            headers={"User-Agent": "Mozilla/5.0"},
+            timeout=20,
+        )
+        response.raise_for_status()
+
+        payload = response.json()
+        chart = payload.get("chart", {})
+        if chart.get("error"):
+            logger.error(f"Yahoo error para {symbol} {interval}: {chart['error']}")
+            return None
+
+        result = (chart.get("result") or [None])[0]
+        if not result or not result.get("timestamp"):
+            logger.warning(f"Sin datos para {symbol} {interval}")
+            return None
+
+        quote = (result.get("indicators", {}).get("quote") or [None])[0]
+        if not quote:
+            logger.warning(f"Sin OHLC para {symbol} {interval}")
+            return None
+
+        df = pd.DataFrame({
+            "Open": quote.get("open"),
+            "High": quote.get("high"),
+            "Low": quote.get("low"),
+            "Close": quote.get("close"),
+            "Volume": quote.get("volume"),
+        }, index=pd.to_datetime(result["timestamp"], unit="s", utc=True))
+        df = df.dropna(subset=["Open", "High", "Low", "Close"])
+
+        resample_rule = RESAMPLE_RULES.get(interval)
+        if resample_rule:
+            df = _resample_ohlc(df, resample_rule)
+
         if df.empty or len(df) < 250:
             logger.warning(f"Datos insuficientes para {symbol} {interval}")
             return None
-        df.index = pd.to_datetime(df.index)
+
         return df
     except Exception as e:
         logger.error(f"Error descargando {symbol} {interval}: {e}")
