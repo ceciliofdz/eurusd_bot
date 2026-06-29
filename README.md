@@ -19,7 +19,15 @@ Este proyecto ejecuta un servidor Flask que carga perfiles de configuración por
 
 ```
 eurusd_bot/
-├── main.py             ← Servidor Flask + APScheduler
+├── app.py              ← Arranque local de Flask
+├── wsgi.py             ← Punto de entrada WSGI para Gunicorn
+├── backend/            ← Backend Flask, API, scheduler y Telegram
+│   └── app.py
+├── frontend/           ← Frontend estático servido por Flask
+│   ├── index.html
+│   └── static/
+│       ├── app.js
+│       └── styles.css
 ├── signal_engine.py    ← Cálculo de señales y descarga de datos de Yahoo Finance
 ├── requirements.txt    ← Dependencias de Python
 ├── .gitignore          ← Archivos que no deben versionarse
@@ -27,8 +35,6 @@ eurusd_bot/
 ├── .env                ← Credenciales y tokens de Telegram (no subir a git)
 ├── profiles/           ← Configuraciones guardadas por par (.json)
 ├── signals.log         ← Registro de ejecución generado en tiempo de ejecución
-└── templates/
-    └── index.html      ← Interfaz web de configuración y monitorización
 ```
 
 ---
@@ -70,16 +76,26 @@ TELEGRAM_CHAT_ID=tu_chat_id_aqui
 Inicia el servidor Flask con:
 
 ```bash
-python main.py
+python app.py
 ```
 
 Luego abre en el navegador:
 
 ```
-http://localhost:5000
+http://localhost:5005
 ```
 
-La aplicación arrancará en el puerto `5000` y mostrará la interfaz para gestionar configuraciones.
+La aplicación arrancará en el puerto `5005` y mostrará la interfaz para gestionar configuraciones.
+
+### Ejecución en VPS con Gunicorn
+
+En producción usa el punto de entrada WSGI:
+
+```bash
+gunicorn --workers 1 --bind 0.0.0.0:5005 wsgi:app
+```
+
+Se recomienda `--workers 1` porque APScheduler se ejecuta dentro del proceso Flask. Si se lanzan varios workers, cada worker podría programar los mismos escaneos.
 
 ---
 

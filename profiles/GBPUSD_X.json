@@ -9,6 +9,6 @@
   "tp_atr": 2.0,
   "use_htf": true,
   "htf": "D",
-  "interval": 60,
+  "interval": 30,
   "enabled": true
 }
