@@ -185,9 +185,9 @@ nohup python main.py > bot.log 2>&1 &
 
 - `flask`
 - `python-dotenv`
-- `pandas`
 - `requests`
 - `apscheduler`
+- `gunicorn`
 
 ---
 
