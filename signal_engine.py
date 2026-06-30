@@ -135,6 +135,58 @@ def _crossunder(values: list[float], level: float, index: int) -> bool:
     return values[index] < level and values[index - 1] >= level
 
 
+def _crossed_over_recently(values: list[float], level: float, index: int, lookback: int) -> bool:
+    start = max(1, index - lookback + 1)
+    return any(_crossover(values, level, i) for i in range(start, index + 1))
+
+
+def _crossed_under_recently(values: list[float], level: float, index: int, lookback: int) -> bool:
+    start = max(1, index - lookback + 1)
+    return any(_crossunder(values, level, i) for i in range(start, index + 1))
+
+
+def _rising(values: list[float], index: int, bars: int = 3) -> bool:
+    start = max(0, index - bars)
+    return values[index] > values[start]
+
+
+def _falling(values: list[float], index: int, bars: int = 3) -> bool:
+    start = max(0, index - bars)
+    return values[index] < values[start]
+
+
+def _recent_pullback_long(
+    candles: list[Candle],
+    ema_fast_values: list[float],
+    atr_values: list[float],
+    index: int,
+    lookback: int,
+    tolerance_atr: float,
+) -> bool:
+    start = max(0, index - lookback + 1)
+    for i in range(start, index + 1):
+        tolerance = atr_values[i] * tolerance_atr
+        if candles[i].low <= ema_fast_values[i] + tolerance:
+            return True
+    return False
+
+
+def _recent_pullback_short(
+    candles: list[Candle],
+    ema_fast_values: list[float],
+    atr_values: list[float],
+    index: int,
+    lookback: int,
+    tolerance_atr: float,
+) -> bool:
+    start = max(0, index - lookback + 1)
+    for i in range(start, index + 1):
+        tolerance = atr_values[i] * tolerance_atr
+        if candles[i].high >= ema_fast_values[i] - tolerance:
+            return True
+    return False
+
+
 def _resample_candles(candles: list[Candle], seconds: int) -> list[Candle]:
     grouped = {}
     for candle in candles:
@@ -250,6 +302,13 @@ def compute_signal(config: dict) -> Optional[Signal]:
     stop_atr = float(config.get("stop_atr", 1.5))
     tp_atr = float(config.get("tp_atr", 3.0))
     use_htf = bool(config.get("use_htf", True))
+    pullback_lookback = int(config.get("pullback_lookback", 8))
+    momentum_lookback = int(config.get("momentum_lookback", 6))
+    trend_slope_bars = int(config.get("trend_slope_bars", 5))
+    pullback_tolerance_atr = float(config.get("pullback_tolerance_atr", 0.20))
+    max_extension_atr = float(config.get("max_extension_atr", 2.20))
+    rsi_long_min = float(config.get("rsi_long_min", 52))
+    rsi_short_max = float(config.get("rsi_short_max", 48))
 
     yf_tf = TIMEFRAME_MAP.get(tf, "1h")
     yf_htf = TIMEFRAME_MAP.get(htf, "1d")
@@ -290,16 +349,56 @@ def compute_signal(config: dict) -> Optional[Signal]:
 
     trend_bull = last_ema_fast > last_ema_slow
     trend_bear = last_ema_fast < last_ema_slow
-    long_filter = trend_bull and (not use_htf or htf_bull)
-    short_filter = trend_bear and (not use_htf or htf_bear)
+    slope_index = max(0, index - trend_slope_bars)
+    ema_fast_rising = last_ema_fast > ema_fast_values[slope_index]
+    ema_fast_falling = last_ema_fast < ema_fast_values[slope_index]
+    long_filter = trend_bull and ema_fast_rising and (not use_htf or htf_bull)
+    short_filter = trend_bear and ema_fast_falling and (not use_htf or htf_bear)
 
-    pullback_long = last.low <= last_ema_fast and last.close > last_ema_fast
-    pullback_short = last.high >= last_ema_fast and last.close < last_ema_fast
-    momentum_long = _crossover(rsi_values, 50, index)
-    momentum_short = _crossunder(rsi_values, 50, index)
+    pullback_long = _recent_pullback_long(
+        candles,
+        ema_fast_values,
+        atr_values,
+        index,
+        pullback_lookback,
+        pullback_tolerance_atr,
+    )
+    pullback_short = _recent_pullback_short(
+        candles,
+        ema_fast_values,
+        atr_values,
+        index,
+        pullback_lookback,
+        pullback_tolerance_atr,
+    )
+    momentum_long = (
+        rsi_values[index] >= rsi_long_min
+        and (_rising(rsi_values, index) or _crossed_over_recently(rsi_values, 50, index, momentum_lookback))
+    )
+    momentum_short = (
+        rsi_values[index] <= rsi_short_max
+        and (_falling(rsi_values, index) or _crossed_under_recently(rsi_values, 50, index, momentum_lookback))
+    )
+    previous = candles[index - 1] if index > 0 else last
+    confirmation_long = last.close > last_ema_fast and last.close > previous.close
+    confirmation_short = last.close < last_ema_fast and last.close < previous.close
+    extension_atr = abs(last.close - last_ema_fast) / atr_values[index] if atr_values[index] else 999
+    not_overextended = extension_atr <= max_extension_atr
 
-    long_entry = long_filter and pullback_long and momentum_long
-    short_entry = short_filter and pullback_short and momentum_short
+    long_entry = (
+        long_filter
+        and pullback_long
+        and momentum_long
+        and confirmation_long
+        and not_overextended
+    )
+    short_entry = (
+        short_filter
+        and pullback_short
+        and momentum_short
+        and confirmation_short
+        and not_overextended
+    )
 
     close_price = float(last.close)
     atr_val = float(atr_values[index])

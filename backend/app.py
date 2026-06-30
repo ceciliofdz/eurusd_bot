@@ -56,6 +56,13 @@ DEFAULT_CONFIG = {
     "htf":       "D",
     "interval":  30,
     "enabled":   True,
+    "pullback_lookback":      8,
+    "momentum_lookback":      6,
+    "trend_slope_bars":       5,
+    "pullback_tolerance_atr": 0.20,
+    "max_extension_atr":      2.20,
+    "rsi_long_min":           52,
+    "rsi_short_max":          48,
 }
 
 HTF_OPTIONS = [
