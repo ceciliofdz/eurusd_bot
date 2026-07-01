@@ -1,0 +1,21 @@
+{
+  "symbol": "^GSPC",
+  "timeframe": "240",
+  "ema_fast": 50,
+  "ema_slow": 200,
+  "rsi_len": 19,
+  "atr_len": 13,
+  "stop_atr": 1.6,
+  "tp_atr": 1.6,
+  "use_htf": true,
+  "htf": "D",
+  "interval": 15,
+  "enabled": true,
+  "pullback_lookback": 8,
+  "momentum_lookback": 6,
+  "trend_slope_bars": 5,
+  "pullback_tolerance_atr": 0.2,
+  "max_extension_atr": 2.2,
+  "rsi_long_min": 52,
+  "rsi_short_max": 48
+}

@@ -83,7 +83,7 @@
 
   /* ── Layout ── */
   main {
-    max-width: 1160px; margin: 0 auto;
+    max-width: 1440px; margin: 0 auto;
     padding: 20px 16px;
   }
   .tab-panel { display: none; }
@@ -93,11 +93,47 @@
     flex-direction: column;
     gap: 16px;
   }
+  #tab-analysis .right-col {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    align-items: start;
+    width: 100%;
+  }
+  #tab-analysis #signals-container {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    align-items: start;
+    width: 100%;
+  }
+  #tab-analysis #signals-container > .card {
+    height: fit-content;
+    min-width: 0;
+  }
   .left-col { max-width: 420px; }
-  @media(max-width:800px){ .left-col { max-width: none; } }
+  .config-layout {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.1fr);
+    gap: 16px;
+    align-items: start;
+  }
+  .config-card { height: fit-content; }
+  @media(max-width:1000px){
+    .config-layout { grid-template-columns: 1fr; }
+  }
+  @media(max-width:900px){
+    #tab-analysis .right-col,
+    #tab-analysis #signals-container {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media(max-width:800px){
+    .left-col { max-width: none; }
+  }
 
   /* ── Cards ── */
-  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; width: 100%; min-width: 0; }
   .card-header {
     padding: 11px 16px; background: var(--bg3);
     border-bottom: 1px solid var(--border);
