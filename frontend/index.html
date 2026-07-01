@@ -11,6 +11,11 @@
 
 <header>
   <div class="logo">FOREX SWING BOT</div>
+  <nav class="tabs" aria-label="Pestañas de la interfaz">
+    <button class="tab-btn active" data-tab="config">⚙ Configuración y pares</button>
+    <button class="tab-btn" data-tab="analysis">📡 Tarjetas de análisis</button>
+    <button class="tab-btn" data-tab="signals">📋 Últimas señales</button>
+  </nav>
   <div class="header-right">
     <span id="last-check">—</span>
     <span id="telegram-status" class="badge-telegram error">Telegram</span>
@@ -18,171 +23,164 @@
 </header>
 
 <main>
-
-  <!-- ── Columna izquierda ── -->
-  <div class="left-col">
-
-    <!-- Perfiles guardados -->
-    <div class="card">
-      <div class="card-header">
-        <span>📂 Pares guardados</span>
-        <span id="profile-count" style="color:var(--muted);font-weight:400">0</span>
-      </div>
-      <div id="profiles-list">
-        <div class="profiles-empty">Sin perfiles aún. Configura un par y guárdalo.</div>
-      </div>
-    </div>
-
-    <!-- Configuración -->
-    <div class="card">
-      <div class="card-header">⚙ Configuración</div>
-      <div class="card-body">
-
-        <div class="toggle-row">
-          <span class="toggle-label">Bot activo</span>
-          <label class="toggle">
-            <input type="checkbox" id="enabled" >
-            <span class="slider"></span>
-          </label>
+  <section id="tab-config" class="tab-panel active">
+    <div class="left-col">
+      <div class="card">
+        <div class="card-header">
+          <span>📂 Pares guardados</span>
+          <span id="profile-count" style="color:var(--muted);font-weight:400">0</span>
         </div>
-
-        <div class="field">
-          <label>Par (Yahoo Finance)</label>
-          <select id="symbol">
-            <!-- Forex -->
-            <optgroup label="Forex">
-              <option value="EURUSD=X">EUR/USD (Euro / US Dollar)</option>
-              <option value="GBPUSD=X">GBP/USD (British Pound / US Dollar)</option>
-              <option value="USDJPY=X">USD/JPY (US Dollar / Japanese Yen)</option>
-              <option value="AUDUSD=X">AUD/USD (Australian Dollar / US Dollar)</option>
-              <option value="USDCAD=X">USD/CAD (US Dollar / Canadian Dollar)</option>
-              <option value="USDCHF=X">USD/CHF (US Dollar / Swiss Franc)</option>
-              <option value="EURGBP=X">EUR/GBP (Euro / British Pound)</option>
-              <option value="EURJPY=X">EUR/JPY (Euro / Japanese Yen)</option>
-              <option value="GBPJPY=X">GBP/JPY (British Pound / Japanese Yen)</option>
-              <option value="AUDJPY=X">AUD/JPY (Australian Dollar / Japanese Yen)</option>
-              <option value="NZDUSD=X">NZD/USD (New Zealand Dollar / US Dollar)</option>
-            </optgroup>
-            <!-- Crypto -->
-            <optgroup label="Criptomonedas">
-              <option value="BTC-USD">BTC/USD (Bitcoin)</option>
-              <option value="ETH-USD">ETH/USD (Ethereum)</option>
-              <option value="SOL-USD">SOL/USD (Solana)</option>
-              <option value="BNB-USD">BNB/USD (Binance Coin)</option>
-              <option value="XRP-USD">XRP/USD (Ripple)</option>
-            </optgroup>
-            <!-- Índices -->
-            <optgroup label="Índices">
-              <option value="^GSPC">S&P 500 (^GSPC)</option>
-              <option value="^IXIC">NASDAQ (^IXIC)</option>
-              <option value="^DJI">Dow Jones (^DJI)</option>
-              <option value="^IBEX">IBEX 35 (^IBEX)</option>
-              <option value="^GDAXI">DAX (^GDAXI)</option>
-              <option value="^FTSE">FTSE 100 (^FTSE)</option>
-              <option value="^N225">Nikkei 225 (^N225)</option>
-            </optgroup>
-            <optgroup id="custom-optgroup" label="Personalizados"></optgroup>
-            <option value="__custom__">➕ Añadir otro par / ticker...</option>
-          </select>
+        <div id="profiles-list">
+          <div class="profiles-empty">Sin perfiles aún. Configura un par y guárdalo.</div>
         </div>
+      </div>
 
-        <div class="field-row">
+      <div class="card">
+        <div class="card-header">⚙ Configuración</div>
+        <div class="card-body">
+          <div class="toggle-row">
+            <span class="toggle-label">Bot activo</span>
+            <label class="toggle">
+              <input type="checkbox" id="enabled" >
+              <span class="slider"></span>
+            </label>
+          </div>
+
           <div class="field">
-            <label>Timeframe base</label>
-            <select id="timeframe">
-              <option value="15">15 minutos</option>
-              <option value="30">30 minutos</option>
-              <option value="60" selected>1 hora</option>
-              <option value="240">4 horas</option>
-              <option value="D">Diario</option>
+            <label>Par (Yahoo Finance)</label>
+            <select id="symbol">
+              <optgroup label="Forex">
+                <option value="EURUSD=X">EUR/USD (Euro / US Dollar)</option>
+                <option value="GBPUSD=X">GBP/USD (British Pound / US Dollar)</option>
+                <option value="USDJPY=X">USD/JPY (US Dollar / Japanese Yen)</option>
+                <option value="AUDUSD=X">AUD/USD (Australian Dollar / US Dollar)</option>
+                <option value="USDCAD=X">USD/CAD (US Dollar / Canadian Dollar)</option>
+                <option value="USDCHF=X">USD/CHF (US Dollar / Swiss Franc)</option>
+                <option value="EURGBP=X">EUR/GBP (Euro / British Pound)</option>
+                <option value="EURJPY=X">EUR/JPY (Euro / Japanese Yen)</option>
+                <option value="GBPJPY=X">GBP/JPY (British Pound / Japanese Yen)</option>
+                <option value="AUDJPY=X">AUD/JPY (Australian Dollar / Japanese Yen)</option>
+                <option value="NZDUSD=X">NZD/USD (New Zealand Dollar / US Dollar)</option>
+              </optgroup>
+              <optgroup label="Criptomonedas">
+                <option value="BTC-USD">BTC/USD (Bitcoin)</option>
+                <option value="ETH-USD">ETH/USD (Ethereum)</option>
+                <option value="SOL-USD">SOL/USD (Solana)</option>
+                <option value="BNB-USD">BNB/USD (Binance Coin)</option>
+                <option value="XRP-USD">XRP/USD (Ripple)</option>
+              </optgroup>
+              <optgroup label="Índices">
+                <option value="^GSPC">S&P 500 (^GSPC)</option>
+                <option value="^IXIC">NASDAQ (^IXIC)</option>
+                <option value="^DJI">Dow Jones (^DJI)</option>
+                <option value="^IBEX">IBEX 35 (^IBEX)</option>
+                <option value="^GDAXI">DAX (^GDAXI)</option>
+                <option value="^FTSE">FTSE 100 (^FTSE)</option>
+                <option value="^N225">Nikkei 225 (^N225)</option>
+              </optgroup>
+              <optgroup id="custom-optgroup" label="Personalizados"></optgroup>
+              <option value="__custom__">➕ Añadir otro par / ticker...</option>
             </select>
           </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Timeframe base</label>
+              <select id="timeframe">
+                <option value="15">15 minutos</option>
+                <option value="30">30 minutos</option>
+                <option value="60" selected>1 hora</option>
+                <option value="240">4 horas</option>
+                <option value="D">Diario</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Intervalo (min)</label>
+              <input type="number" id="interval" value="30" min="5" max="1440">
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>EMA rápida</label>
+              <input type="number" id="ema_fast" value="50" min="1">
+            </div>
+            <div class="field">
+              <label>EMA lenta</label>
+              <input type="number" id="ema_slow" value="200" min="1">
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>RSI</label>
+              <input type="number" id="rsi_len" value="14" min="1">
+            </div>
+            <div class="field">
+              <label>ATR</label>
+              <input type="number" id="atr_len" value="14" min="1">
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Stop × ATR</label>
+              <input type="number" id="stop_atr" value="1.5" step="0.1" min="0.1">
+            </div>
+            <div class="field">
+              <label>TP × ATR</label>
+              <input type="number" id="tp_atr" value="3.0" step="0.1" min="0.1">
+            </div>
+          </div>
+
+          <div class="toggle-row">
+            <span class="toggle-label">Filtro marco mayor</span>
+            <label class="toggle">
+              <input type="checkbox" id="use_htf" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
           <div class="field">
-            <label>Intervalo (min)</label>
-            <input type="number" id="interval" value="30" min="5" max="1440">
+            <label>Marco mayor (HTF)</label>
+            <select id="htf">
+              <option value="60">1 hora</option>
+              <option value="240">4 horas</option>
+              <option value="D" selected>Diario</option>
+              <option value="W">Semanal</option>
+            </select>
+          </div>
+
+          <hr class="divider">
+
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="saveConfig()">💾 Guardar par</button>
+            <button class="btn btn-scan" onclick="scanNow()">▶ Escanear ahora</button>
+          </div>
+          <div class="btn-row" style="margin-top:8px">
+            <button class="btn btn-test" onclick="testTelegram()">📨 Probar Telegram</button>
           </div>
         </div>
-
-        <div class="field-row">
-          <div class="field">
-            <label>EMA rápida</label>
-            <input type="number" id="ema_fast" value="50" min="1">
-          </div>
-          <div class="field">
-            <label>EMA lenta</label>
-            <input type="number" id="ema_slow" value="200" min="1">
-          </div>
-        </div>
-
-        <div class="field-row">
-          <div class="field">
-            <label>RSI</label>
-            <input type="number" id="rsi_len" value="14" min="1">
-          </div>
-          <div class="field">
-            <label>ATR</label>
-            <input type="number" id="atr_len" value="14" min="1">
-          </div>
-        </div>
-
-        <div class="field-row">
-          <div class="field">
-            <label>Stop × ATR</label>
-            <input type="number" id="stop_atr" value="1.5" step="0.1" min="0.1">
-          </div>
-          <div class="field">
-            <label>TP × ATR</label>
-            <input type="number" id="tp_atr" value="3.0" step="0.1" min="0.1">
-          </div>
-        </div>
-
-        <div class="toggle-row">
-          <span class="toggle-label">Filtro marco mayor</span>
-          <label class="toggle">
-            <input type="checkbox" id="use_htf" checked>
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div class="field">
-          <label>Marco mayor (HTF)</label>
-          <select id="htf">
-            <option value="60">1 hora</option>
-            <option value="240">4 horas</option>
-            <option value="D" selected>Diario</option>
-            <option value="W">Semanal</option>
-          </select>
-        </div>
-
-        <hr class="divider">
-
-        <div class="btn-row">
-          <button class="btn btn-primary" onclick="saveConfig()">💾 Guardar par</button>
-          <button class="btn btn-scan"    onclick="scanNow()">▶ Escanear ahora</button>
-        </div>
-        <div class="btn-row" style="margin-top:8px">
-          <button class="btn btn-test" onclick="testTelegram()">📨 Probar Telegram</button>
-        </div>
-
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- ── Columna derecha ── -->
-  <div class="right-col">
+  <section id="tab-analysis" class="tab-panel">
+    <div class="right-col">
+      <div id="signals-container" style="display:flex; flex-direction:column; gap:16px;"></div>
+    </div>
+  </section>
 
-    <!-- Señales de los pares analizados -->
-    <div id="signals-container" style="display: flex; flex-direction: column; gap: 16px;"></div>
-
-    <!-- Historial -->
-    <div class="card">
-      <div class="card-header">📋 Últimas señales (todos los pares)</div>
-      <div id="log-container">
-        <div class="empty-log">Sin señales aún.</div>
+  <section id="tab-signals" class="tab-panel">
+    <div class="right-col">
+      <div class="card">
+        <div class="card-header">📋 Últimas señales (todos los pares)</div>
+        <div id="log-container">
+          <div class="empty-log">Sin señales aún.</div>
+        </div>
       </div>
     </div>
-
-  </div>
+  </section>
 </main>
 
 <div id="toast"></div>

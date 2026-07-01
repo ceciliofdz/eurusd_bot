@@ -342,8 +342,24 @@ async function testTelegram() {
   } catch(e) { toast('✗ Error de red', 'err'); }
 }
 
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabName);
+  });
+
+  document.querySelectorAll('.tab-panel').forEach(panel => {
+    panel.classList.toggle('active', panel.id === `tab-${tabName}`);
+  });
+}
+
 // Arranque
 setSymbolValue(activeSymbol);
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+switchTab('config');
 
 document.getElementById('symbol').addEventListener('change', function(e) {
   if (this.value === '__custom__') {
